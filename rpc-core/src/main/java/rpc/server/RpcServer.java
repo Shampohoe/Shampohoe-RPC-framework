@@ -29,9 +29,7 @@ public class RpcServer {
 
     public RpcServer(ServiceRegistry serviceRegistry){
         this.serviceRegistry = serviceRegistry;
-        /**
-         * 设置上限为100个线程的阻塞队列
-         */
+        // 设置上限为100个线程的阻塞队列
         BlockingQueue<Runnable> workingQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
          // 创建线程池实例

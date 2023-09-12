@@ -1,6 +1,10 @@
 package rpc.client;
 
 import com.shampohoe.rpc.entity.RpcRequest;
+import com.shampohoe.rpc.entity.RpcResponse;
+import com.shampohoe.rpc.enums.ResponseCode;
+import com.shampohoe.rpc.enums.RpcError;
+import com.shampohoe.rpc.exception.RpcException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -29,10 +33,19 @@ public class RpcClient {
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             objectOutputStream.writeObject(rpcRequest);
             objectOutputStream.flush();
-            return objectInputStream.readObject();
+            RpcResponse rpcResponse = (RpcResponse)objectInputStream.readObject();
+            if(rpcResponse == null){
+                log.error("服务调用失败，service:{}" + rpcRequest.getInterfaceName());
+                throw new RpcException(RpcError.SERVICE_INVOCATION_FAILURE, "service:" + rpcRequest.getInterfaceName());
+            }
+            if(rpcResponse.getStatusCode() == null || rpcResponse.getStatusCode() != ResponseCode.SUCCESS.getCode()){
+                log.error("服务调用失败，service:{} response:{}", rpcRequest.getInterfaceName(), rpcResponse);
+                throw new RpcException(RpcError.SERVICE_INVOCATION_FAILURE, "service:" + rpcRequest.getInterfaceName());
+            }
+            return rpcResponse.getData();
         } catch (IOException | ClassNotFoundException e) {
             log.error("调用时有错误发生：" + e);
-            return null;
+            throw new RpcException("服务调用失败：", e);
         }
     }
 }

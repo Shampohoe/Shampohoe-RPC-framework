@@ -1,6 +1,8 @@
 package com.shampohoe.rpc.test;
 
 import com.shampohoe.rpc.api.HelloService;
+import rpc.registry.DefaultServiceRegistry;
+import rpc.registry.ServiceRegistry;
 import rpc.server.RpcServer;
 
 /**
@@ -15,8 +17,9 @@ import rpc.server.RpcServer;
 public class TestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
-        RpcServer rpcServer = new RpcServer();
-        //注册HelloServiceImpl服务
-        rpcServer.register(helloService, 9000);
+        ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
+        serviceRegistry.register(helloService);
+        RpcServer rpcServer = new RpcServer(serviceRegistry);
+        rpcServer.start(9000);
     }
 }

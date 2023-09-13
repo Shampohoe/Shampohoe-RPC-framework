@@ -1,7 +1,9 @@
 package com.shampohoe.rpc.entity;
 
 import com.shampohoe.rpc.enums.ResponseCode;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -15,6 +17,8 @@ import java.io.Serializable;
  * #Version 1.1
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RpcResponse<T>implements Serializable {
     /**
      *响应状态码

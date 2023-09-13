@@ -3,23 +3,23 @@ package com.shampohoe.rpc.test;
 import com.shampohoe.rpc.api.HelloService;
 import rpc.registry.DefaultServiceRegistry;
 import rpc.registry.ServiceRegistry;
-import rpc.server.RpcServer;
+import rpc.socket.server.SocketServer;
 
 /**
- * ClassName:TestClient
+ * ClassName:SocketTestServer
  * Package:com.shampohoe.rpc.test
  * Description:
  *
  * @Author kkli
- * @Create 2023/9/12 22:35
+ * @Create 2023/9/13 12:42
  * #Version 1.1
  */
-public class TestServer {
+public class SocketTestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
         ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
         serviceRegistry.register(helloService);
-        RpcServer rpcServer = new RpcServer(serviceRegistry);
-        rpcServer.start(9000);
+        SocketServer socketServer = new SocketServer(serviceRegistry);
+        socketServer.start(9000);
     }
 }

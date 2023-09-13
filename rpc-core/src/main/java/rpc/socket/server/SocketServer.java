@@ -1,6 +1,8 @@
-package rpc.server;
+package rpc.socket.server;
 
 import lombok.extern.slf4j.Slf4j;
+import rpc.client.RequestHandler;
+import rpc.client.RpcServer;
 import rpc.registry.ServiceRegistry;
 
 import java.io.IOException;
@@ -18,7 +20,7 @@ import java.util.concurrent.*;
  * #Version 1.1
  */
 @Slf4j
-public class RpcServer {
+public class SocketServer implements RpcServer {
     private static final int CORE_POOL_SIZE = 5;
     private static final int MAXIMUM_POOL_SIZE = 50;
     private static final int KEEP_ALIVE_TIME = 60;
@@ -27,7 +29,7 @@ public class RpcServer {
     private RequestHandler requestHandler = new RequestHandler();
     private final ServiceRegistry serviceRegistry;
 
-    public RpcServer(ServiceRegistry serviceRegistry){
+    public SocketServer(ServiceRegistry serviceRegistry){
         this.serviceRegistry = serviceRegistry;
         // 设置上限为100个线程的阻塞队列
         BlockingQueue<Runnable> workingQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
@@ -41,6 +43,7 @@ public class RpcServer {
      * @param [service, port]
      * @return [void]
      */
+    @Override
     public void start(int port){
         try(ServerSocket serverSocket = new ServerSocket(port)){
             log.info("服务器启动……");

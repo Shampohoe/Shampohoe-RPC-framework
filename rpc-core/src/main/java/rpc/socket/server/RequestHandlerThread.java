@@ -1,8 +1,9 @@
-package rpc.server;
+package rpc.socket.server;
 
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.entity.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
+import rpc.client.RequestHandler;
 import rpc.registry.ServiceRegistry;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.net.Socket;
 /**
  * ClassName:RequestHandlerThread
  * Package:rpc.server
- * Description:  处理客户端RpcRequest的工作线程
+ * Description:  IO传输模式|处理客户端RpcRequest的工作线程
  *
  * @Author kkli
  * @Create 2023/9/13 1:00
@@ -36,8 +37,10 @@ public class RequestHandlerThread implements  Runnable{
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream())) {
             RpcRequest rpcRequest = (RpcRequest)objectInputStream.readObject();
             String interfaceName = rpcRequest.getInterfaceName();
+
             Object service = serviceRegistry.getService(interfaceName);
             Object result = requestHandler.handle(rpcRequest, service);
+
             objectOutputStream.writeObject(RpcResponse.success(result));
             objectOutputStream.flush();
         }catch (IOException | ClassNotFoundException e){

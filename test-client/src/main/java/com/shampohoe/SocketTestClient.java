@@ -3,20 +3,22 @@ package com.shampohoe;
 import com.shampohoe.rpc.api.HelloObject;
 import com.shampohoe.rpc.api.HelloService;
 import rpc.client.RpcClientProxy;
+import rpc.socket.client.SocketClient;
 
 /**
- * ClassName:TestClient
+ * ClassName:SocketTestClient
  * Package:com.shampohoe
  * Description:
  *
  * @Author kkli
- * @Create 2023/9/12 22:36
+ * @Create 2023/9/13 12:41
  * #Version 1.1
  */
-public class TestClient {
+public class SocketTestClient {
     public static void main(String[] args) {
+        SocketClient client = new SocketClient("127.0.0.1", 9000);
         //接口与代理对象之间的中介对象
-        RpcClientProxy proxy = new RpcClientProxy("127.0.0.1", 9000);
+        RpcClientProxy proxy = new RpcClientProxy(client);
         //创建代理对象
         HelloService helloService = proxy.getProxy(HelloService.class);
         //接口方法的参数对象

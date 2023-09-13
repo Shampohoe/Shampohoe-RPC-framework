@@ -1,4 +1,4 @@
-package rpc.client;
+package com.shampohoe.rpc.client;
 
 import com.shampohoe.rpc.entity.RpcRequest;
 

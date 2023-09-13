@@ -1,8 +1,7 @@
-package rpc.client;
+package com.shampohoe.rpc.client;
 
 import com.shampohoe.rpc.entity.RpcRequest;
 import lombok.extern.slf4j.Slf4j;
-import rpc.socket.client.SocketClient;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package rpc.registry;
+package com.shampohoe.rpc.registry;
 
 import com.shampohoe.rpc.enums.RpcError;
 import com.shampohoe.rpc.exception.RpcException;

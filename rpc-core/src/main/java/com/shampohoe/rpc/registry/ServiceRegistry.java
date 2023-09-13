@@ -1,4 +1,4 @@
-package rpc.registry;
+package com.shampohoe.rpc.registry;
 
 /**
  * ClassName:ServiceRegistry

@@ -1,5 +1,7 @@
 package com.shampohoe.rpc.client;
 
+import com.shampohoe.rpc.serializer.CommonSerializer;
+
 /**
  * ClassName:RpacServer
  * Package:rpc.client
@@ -11,4 +13,5 @@ package com.shampohoe.rpc.client;
  */
 public interface RpcServer {
     void start(int port);
+    void setSerializer(CommonSerializer serializer);
 }

@@ -4,6 +4,7 @@ import com.shampohoe.rpc.api.HelloService;
 import com.shampohoe.rpc.netty.server.NettyServer;
 import com.shampohoe.rpc.registry.DefaultServiceRegistry;
 import com.shampohoe.rpc.registry.ServiceRegistry;
+import com.shampohoe.rpc.serializer.KryoSerializer;
 
 /**
  * ClassName:NettyTestServer
@@ -20,6 +21,7 @@ public class NettyTestServer {
         ServiceRegistry registry = new DefaultServiceRegistry();
         registry.register(helloService);
         NettyServer server = new NettyServer();
+        server.setSerializer(new KryoSerializer());
         server.start(9999);
     }
 }

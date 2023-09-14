@@ -21,6 +21,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RpcRequest implements Serializable {
     /**
+     * 请求号
+     */
+    private String requestId;
+    /**
      * 待调用接口名称
      */
     private String interfaceName;
@@ -36,4 +40,5 @@ public class RpcRequest implements Serializable {
      * 待调用方法的参数类型
      */
     private Class<?>[] paramTypes;
+
 }

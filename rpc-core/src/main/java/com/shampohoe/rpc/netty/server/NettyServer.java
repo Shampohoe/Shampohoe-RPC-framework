@@ -3,6 +3,9 @@ package com.shampohoe.rpc.netty.server;
 import com.shampohoe.rpc.client.RpcServer;
 import com.shampohoe.rpc.codec.CommonDecoder;
 import com.shampohoe.rpc.codec.CommonEncoder;
+import com.shampohoe.rpc.enums.RpcError;
+import com.shampohoe.rpc.exception.RpcException;
+import com.shampohoe.rpc.serializer.CommonSerializer;
 import com.shampohoe.rpc.serializer.JsonSerializer;
 import com.shampohoe.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.ServerBootstrap;
@@ -27,8 +30,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class NettyServer implements RpcServer {
+    private CommonSerializer serializer;
     @Override
     public void start(int port) {
+        if (serializer == null) {
+            log.error("未设置序列化器");
+            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
+        }
         //用于处理客户端新连接的主”线程池“
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         //用于连接后处理IO事件的从”线程池“
@@ -72,5 +80,9 @@ public class NettyServer implements RpcServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+    @Override
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
     }
 }

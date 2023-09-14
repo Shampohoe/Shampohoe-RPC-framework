@@ -1,6 +1,7 @@
 package com.shampohoe.rpc.client;
 
 import com.shampohoe.rpc.entity.RpcRequest;
+import com.shampohoe.rpc.serializer.CommonSerializer;
 
 /**
  * ClassName:RpcClient
@@ -13,4 +14,5 @@ import com.shampohoe.rpc.entity.RpcRequest;
  */
 public interface RpcClient {
     Object sendRequest(RpcRequest rpcRequest);
+    void setSerializer(CommonSerializer serializer);
 }

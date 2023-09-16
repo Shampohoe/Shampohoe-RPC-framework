@@ -3,10 +3,7 @@ package com.shampohoe.rpc.netty.server;
 import com.shampohoe.rpc.client.RequestHandler;
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.entity.RpcResponse;
-import com.shampohoe.rpc.registry.DefaultServiceRegistry;
-import com.shampohoe.rpc.registry.ServiceRegistry;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
+import com.shampohoe.rpc.factory.SingletonFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
@@ -24,23 +21,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
     private static RequestHandler requestHandler;
-    private static ServiceRegistry serviceRegistry;
 
-    static{
-        requestHandler = new RequestHandler();
-        serviceRegistry = new DefaultServiceRegistry();
+
+    public NettyServerHandler() {
+        this.requestHandler = SingletonFactory.getInstance(RequestHandler.class);
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcRequest msg) throws Exception {
-        try{
-            log.info("服务端接收到请求：{}", msg);
-            String interfaceName = msg.getInterfaceName();
-            Object service = serviceRegistry.getService(interfaceName);
-            Object response = requestHandler.handle(msg, service);
-            ChannelFuture future = ctx.writeAndFlush(response);
-            //添加一个监听器到channelfuture来检测是否所有的数据包都发出，然后关闭通道
-            future.addListener(ChannelFutureListener.CLOSE);
+        try {
+            log.info("服务器接收到请求: {}", msg);
+            Object result = requestHandler.handle(msg);
+            if (ctx.channel().isActive() && ctx.channel().isWritable()) {
+                // 向客户端返回响应数据
+                ctx.writeAndFlush(RpcResponse.success(result, msg.getRequestId()));
+            } else {
+                log.error("通道不可写");
+            }
         }finally {
             ReferenceCountUtil.release(msg);
         }

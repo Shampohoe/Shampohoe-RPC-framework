@@ -1,12 +1,15 @@
 package com.shampohoe.rpc.client;
 
 import com.shampohoe.rpc.entity.RpcRequest;
+import com.shampohoe.rpc.entity.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * ClassName:RpcClientProxy
@@ -37,6 +40,15 @@ public class RpcClientProxy implements InvocationHandler {
         log.info("调用方法：{}#{}", method.getDeclaringClass().getName(), method.getName());
         RpcRequest rpcRequest = new RpcRequest(UUID.randomUUID().toString(), method.getDeclaringClass().getName(),
                 method.getName(), args, method.getParameterTypes());
-        return client.sendRequest(rpcRequest);
+
+        RpcResponse rpcResponse = null;
+        CompletableFuture<RpcResponse> completableFuture = (CompletableFuture<RpcResponse>) client.sendRequest(rpcRequest);
+        try {
+            rpcResponse = completableFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("方法调用请求发送失败", e);
+            return null;
+        }
+        return rpcResponse.getData();
     }
 }

@@ -16,8 +16,8 @@ import io.netty.bootstrap.Bootstrap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 import java.util.Date;
 /**
  * ClassName:ChannelProvider
@@ -30,11 +30,62 @@ import java.util.Date;
  */
 @Slf4j
 public class ChannelProvider {
+
     private static EventLoopGroup eventLoopGroup;
     private static Bootstrap bootstrap = initializeBootstrap();
 
-    private static final int MAX_RETRY_COUNT = 5;
-    private static Channel channel = null;
+    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
+
+    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer) throws InterruptedException {
+        String key = inetSocketAddress.toString() + serializer.getCode();
+        if (channels.containsKey(key)) {
+            Channel channel = channels.get(key);
+            if(channels != null && channel.isActive()) {
+                return channel;
+            } else {
+                channels.remove(key);
+            }
+        }
+
+        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                // 执行链: head -> CommonEncoder(out) -> Spliter -> CommonDecoder -> NettyClientHandler -> tail
+                // out出栈主要是对写回结果进行加工
+                // in入栈主要是用来读取服务端数据,写回结果
+                // 发送RpcRequest请求对象,经过CommonEncoder编码按照自定义协议编码成ByteBuf对象
+                pipeline.addLast(new CommonEncoder(serializer))
+                        // 对数据包按照自定义协议进行解码成POJO对象
+                        .addLast(new CommonDecoder())
+                        // 客户端对解码出来的POJO对象进行调用处理
+                        .addLast(new NettyClientHandler());
+            }
+        });
+
+        Channel channel = null;
+        try {
+            channel = connect(bootstrap, inetSocketAddress);
+        } catch (ExecutionException e) {
+            log.error("连接客户端时有错误发生", e);
+            return null;
+        }
+        channels.put(key, channel);
+        return channel;
+    }
+
+    private static Channel connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress) throws ExecutionException, InterruptedException {
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
+        bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                log.info("客户端连接成功!");
+                completableFuture.complete(future.channel());
+            } else {
+                throw new IllegalStateException();
+            }
+        });
+        return completableFuture.get();
+    }
 
     private static Bootstrap initializeBootstrap() {
         eventLoopGroup = new NioEventLoopGroup();
@@ -43,67 +94,10 @@ public class ChannelProvider {
                 .channel(NioSocketChannel.class)
                 //连接的超时时间，超过这个时间还是建立不上的话则代表连接失败
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-                //启用该功能时，TCP会主动探测空闲连接的有效性。可以将此功能视为TCP的心跳机制，默认的心跳间隔是7200s即2小时。
+                //是否开启 TCP 底层心跳机制
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                //配置Channel参数，nodelay没有延迟，true就代表禁用Nagle算法，减小传输延迟。理解可参考：https://blog.csdn.net/lclwjl/article/details/80154565
+                //TCP默认开启了 Nagle 算法，该算法的作用是尽可能的发送大数据快，减少网络传输。TCP_NODELAY 参数的作用就是控制是否启用 Nagle 算法。
                 .option(ChannelOption.TCP_NODELAY, true);
         return bootstrap;
     }
-
-    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer){
-        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch){
-                ch.pipeline().addLast(new CommonEncoder(serializer))
-                        .addLast(new CommonDecoder())
-                        .addLast(new NettyClientHandler());
-            }
-        });
-        //设置计数器值为1
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        try{
-            connect(bootstrap, inetSocketAddress, countDownLatch);
-            //阻塞当前线程直到计时器的值为0
-            countDownLatch.await();
-        }catch (InterruptedException e){
-            log.error("获取Channel时有错误发生", e);
-        }
-        return channel;
-    }
-
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, CountDownLatch countDownLatch) {
-        connect(bootstrap, inetSocketAddress, MAX_RETRY_COUNT, countDownLatch);
-    }
-
-    /**
-     * @description Netty客户端创建通道连接,实现连接失败重试机制
-     * @param [bootstrap, inetSocketAddress, retry, countDownLatch]
-     * @return [void]
-     * @date [2021-03-11 14:19]
-     */
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, int retry, CountDownLatch countDownLatch) {
-        bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                log.info("客户端连接成功！");
-                channel = future.channel();
-                //计数器减一
-                countDownLatch.countDown();
-                return;
-            }
-            if (retry == 0) {
-                log.error("客户端连接失败：重试次数已用完，放弃连接！");
-                countDownLatch.countDown();
-                throw new RpcException(RpcError.CLIENT_CONNECT_SERVER_FAILURE);
-            }
-            //第几次重连
-            int order = (MAX_RETRY_COUNT - retry) + 1;
-            //重连的时间间隔，相当于1乘以2的order次方
-            int delay = 1 << order;
-            log.error("{}:连接失败，第{}次重连……", new Date(), order);
-            //利用schedule()在给定的延迟时间后执行connect()重连
-            bootstrap.config().group().schedule(() -> connect(bootstrap, inetSocketAddress, retry - 1, countDownLatch), delay,
-                    TimeUnit.SECONDS);
-        });
-    }
-
 }

@@ -13,6 +13,7 @@ import com.shampohoe.rpc.serializer.CommonSerializer;
  * #Version 1.1
  */
 public interface RpcClient {
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
     Object sendRequest(RpcRequest rpcRequest);
-    void setSerializer(CommonSerializer serializer);
+
 }

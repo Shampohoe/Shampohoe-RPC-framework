@@ -3,6 +3,8 @@ package com.shampohoe.rpc.client;
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.entity.RpcResponse;
 import com.shampohoe.rpc.enums.ResponseCode;
+import com.shampohoe.rpc.provider.ServiceProvider;
+import com.shampohoe.rpc.provider.ServiceProviderImpl;
 import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,26 +21,24 @@ import java.lang.reflect.Method;
  */
 @Slf4j
 public class RequestHandler {
-
-    public Object handle(RpcRequest rpcRequest, Object service){
-        Object result = null;
-        try{
-            result = invokeTargetMethod(rpcRequest, service);
-            log.info("服务：{}成功调用方法：{}", rpcRequest.getInterfaceName(), rpcRequest.getMethodName());
-        }catch (IllegalAccessException | InvocationTargetException e){
-            log.info("调用或发送时有错误发生：" + e);
-        }
-        return RpcResponse.success(result, rpcRequest.getRequestId());
+    private static final ServiceProvider serviceProvider;
+    static {
+        serviceProvider = new ServiceProviderImpl();
+    }
+    public Object handle(RpcRequest rpcRequest) {
+        Object service = serviceProvider.getServiceProvider(rpcRequest.getInterfaceName());
+        return invokeTargetMethod(rpcRequest, service);
     }
 
-    private Object invokeTargetMethod(RpcRequest rpcRequest,Object service) throws InvocationTargetException, IllegalAccessException{
-        Method method;
+    private Object invokeTargetMethod(RpcRequest rpcRequest,Object service) {
+        Object result;
         try{
-            //getClass()获取的是实例对象的类型
-            method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
-        }catch (NoSuchMethodException e){
+            Method method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
+            result = method.invoke(service, rpcRequest.getParameters());
+            log.info("服务:{} 成功调用方法:{}", rpcRequest.getInterfaceName(), rpcRequest.getMethodName());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e ) {
             return RpcResponse.fail(ResponseCode.METHOD_NOT_FOUND, rpcRequest.getRequestId());
         }
-        return method.invoke(service, rpcRequest.getParameters());
+        return result;
     }
 }

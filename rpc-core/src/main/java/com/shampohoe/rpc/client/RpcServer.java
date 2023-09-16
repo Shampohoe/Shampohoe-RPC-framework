@@ -12,6 +12,7 @@ import com.shampohoe.rpc.serializer.CommonSerializer;
  * #Version 1.1
  */
 public interface RpcServer {
-    void start(int port);
-    void setSerializer(CommonSerializer serializer);
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
+    void start();
+    <T> void publishService(T service, Class<T> serviceClass);
 }

@@ -1,6 +1,7 @@
 package com.shampohoe.rpc.netty.client;
 
 import com.shampohoe.rpc.entity.RpcResponse;
+import com.shampohoe.rpc.factory.SingletonFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
@@ -19,6 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
+    private final UnprocessedRequests unprocessedRequests;
+
+    public NettyClientHandler() {
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+    }
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponse msg) throws Exception {
         try {

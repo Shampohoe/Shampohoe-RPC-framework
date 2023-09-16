@@ -5,6 +5,7 @@ import com.shampohoe.rpc.api.HelloService;
 import com.shampohoe.rpc.client.RpcClient;
 import com.shampohoe.rpc.client.RpcClientProxy;
 import com.shampohoe.rpc.netty.client.NettyClient;
+import com.shampohoe.rpc.serializer.CommonSerializer;
 import com.shampohoe.rpc.serializer.KryoSerializer;
 
 /**
@@ -18,8 +19,7 @@ import com.shampohoe.rpc.serializer.KryoSerializer;
  */
 public class NettyTestClient {
     public static void main(String[] args) {
-        RpcClient client = new NettyClient("127.0.0.1", 9999);
-        client.setSerializer(new KryoSerializer());
+        RpcClient client = new NettyClient(CommonSerializer.KRYO_SERIALIZER);
         RpcClientProxy rpcClientProxy = new RpcClientProxy(client);
         HelloService helloService = rpcClientProxy.getProxy(HelloService.class);
         HelloObject object = new HelloObject(12, "this is netty style");

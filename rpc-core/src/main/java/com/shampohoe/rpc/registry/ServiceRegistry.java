@@ -1,30 +1,20 @@
 package com.shampohoe.rpc.registry;
 
-import lombok.Data;
-
 import java.net.InetSocketAddress;
 
 /**
- * ClassName:ServiceRegistry
- * Package:rpc.registry
- * Description:
- *
- * @Author kkli
- * @Create 2023/9/12 23:34
- * #Version 1.1
+ * 服务注册接口
+ * 注册:保存服务和地址
+ * @ClassName: ServiceRegistry
+ * @Author: whc
+ * @Date: 2021/06/09/22:29
  */
-
 public interface ServiceRegistry {
-    /**
-     * @description 将一个服务注册进注册表
-     * @param [service] 待注册的服务实体
-     * @param <T> 服务实体类
-     */
-    void register(String serviceName, InetSocketAddress inetSocketAddress);
 
-    /**
-     * @description 根据服务名获取服务实体
-     * @param [serviceName] 服务名称
-     */
-    InetSocketAddress serviceDiscovery(String serviceName);
+	/**
+	 * 将一个服务注册进注册表
+	 * @param serviceName 服务名称
+	 * @param inetSocketAddress 提供服务的地址
+	 */
+	void register(String serviceName, InetSocketAddress inetSocketAddress);
 }

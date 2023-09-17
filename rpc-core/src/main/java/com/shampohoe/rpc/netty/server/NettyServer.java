@@ -3,14 +3,14 @@ package com.shampohoe.rpc.netty.server;
 import com.shampohoe.rpc.client.RpcServer;
 import com.shampohoe.rpc.codec.CommonDecoder;
 import com.shampohoe.rpc.codec.CommonEncoder;
+import com.shampohoe.rpc.codec.Spliter;
 import com.shampohoe.rpc.enums.RpcError;
 import com.shampohoe.rpc.exception.RpcException;
 import com.shampohoe.rpc.provider.ServiceProviderImpl;
 import com.shampohoe.rpc.provider.ServiceProvider;
 import com.shampohoe.rpc.registry.ServiceRegistry;
-import com.shampohoe.rpc.registry.ZkServiceRegistry;
+import com.shampohoe.rpc.registry.zk.ZKServiceRegistryImpl;
 import com.shampohoe.rpc.serializer.CommonSerializer;
-import com.shampohoe.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -50,7 +50,7 @@ public class NettyServer implements RpcServer {
         this.host = host;
         this.port = port;
 
-        serviceRegistry = new ZkServiceRegistry();
+        serviceRegistry = new ZKServiceRegistryImpl();
         serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
     }
@@ -97,7 +97,10 @@ public class NettyServer implements RpcServer {
                             ChannelPipeline pipeline = ch.pipeline();
                             //往管道中添加Handler，注意入站Handler与出站Handler都必须按实际执行顺序添加，比如先解码再Server处理，那Decoder()就要放在前面。
                             //但入站和出站Handler之间则互不影响，这里我就是先添加的出站Handler再添加的入站
-                            pipeline.addLast(new CommonEncoder(new KryoSerializer()))
+                            pipeline.addLast(new CommonEncoder(serializer))
+                                     // 基于长度域拆包器以及拒绝非本协议连接
+                                     // 对客户端传送过来的数据包进行拆包,然后拼装成符合自定义数据包大小的ByteBuf
+                                    .addLast(new Spliter())
                                     .addLast(new CommonDecoder())
                                     .addLast(new NettyServerHandler());
                         }

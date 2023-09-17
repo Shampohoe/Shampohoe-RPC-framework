@@ -8,13 +8,13 @@ import com.shampohoe.rpc.entity.RpcResponse;
 import com.shampohoe.rpc.enums.RpcError;
 import com.shampohoe.rpc.exception.RpcException;
 import com.shampohoe.rpc.factory.SingletonFactory;
+import com.shampohoe.rpc.loadbalance.LoadBalancer;
+import com.shampohoe.rpc.loadbalance.loadbalancer.RandomLoadBalance;
 import com.shampohoe.rpc.registry.ServiceRegistry;
-import com.shampohoe.rpc.registry.ZkServiceRegistry;
+import com.shampohoe.rpc.registry.ServiceDiscovery;
+import com.shampohoe.rpc.registry.zk.ZKServiceDiscoveryImpl;
 import com.shampohoe.rpc.serializer.CommonSerializer;
-import com.shampohoe.rpc.serializer.JsonSerializer;
-import com.shampohoe.rpc.serializer.KryoSerializer;
-import com.shampohoe.rpc.util.RpcMessageChecker;
-import io.netty.channel.socket.SocketChannel;
+
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -54,18 +54,25 @@ public class NettyClient implements RpcClient {
                 // 2. 指定IO类型为NIO
                 .channel(NioSocketChannel.class);
     }
-
-    private final ServiceRegistry serviceDiscovery;
-    private final CommonSerializer serializer;
-    private final UnprocessedRequests unprocessedRequests;
-
     public NettyClient() {
-        this(DEFAULT_SERIALIZER);
+        this(DEFAULT_SERIALIZER, new RandomLoadBalance());
+    }
+
+    public NettyClient(LoadBalancer loadBalancer) {
+        this(DEFAULT_SERIALIZER, loadBalancer);
     }
 
     public NettyClient(Integer serializer) {
+        this(serializer, new RandomLoadBalance());
+    }
+
+    private final ServiceDiscovery serviceDiscovery;
+    private final CommonSerializer serializer;
+    private final UnprocessedRequests unprocessedRequests;
+
+    public NettyClient(Integer serializer, LoadBalancer loadBalancer) {
         // 初始化注册中心，建立连接
-        this.serviceDiscovery = new ZkServiceRegistry();
+        this.serviceDiscovery =  new ZKServiceDiscoveryImpl(loadBalancer);
         this.serializer = CommonSerializer.getByCode(serializer);
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
     }

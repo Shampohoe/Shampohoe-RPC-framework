@@ -26,6 +26,9 @@ public class CommonEncoder extends MessageToByteEncoder {
         this.serializer = serializer;
     }
 
+    // 自定义传输协议,防止粘包
+    // 消息格式为: [魔数][数据包类型][序列化器类型][数据长度][数据]
+    //			  4字节   4字节      4字节       4字节
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         //数据写到缓冲区

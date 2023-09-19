@@ -8,6 +8,7 @@ import com.shampohoe.rpc.loadbalance.loadbalancer.RoundLoadBalance;
 import com.shampohoe.rpc.netty.client.NettyClient;
 import com.shampohoe.rpc.serializer.CommonSerializer;
 import com.shampohoe.rpc.serializer.KryoSerializer;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ClassName:NettyTestClient
@@ -18,6 +19,7 @@ import com.shampohoe.rpc.serializer.KryoSerializer;
  * @Create 2023/9/13 15:07
  * #Version 1.1
  */
+@Slf4j
 public class NettyTestClient {
     public static void main(String[] args) {
         RpcClient client = new NettyClient(CommonSerializer.KRYO_SERIALIZER,new RoundLoadBalance());
@@ -26,5 +28,10 @@ public class NettyTestClient {
         HelloObject object = new HelloObject(12, "this is netty style");
         String res = helloService.hello(object);
         System.out.println(res);
+
+        log.info("aaaaa");
+        String res2 = helloService.hello(object);
+        System.out.println(res2);
+        log.info("bbbbbbb");
     }
 }

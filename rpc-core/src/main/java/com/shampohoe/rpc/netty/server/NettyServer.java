@@ -18,9 +18,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -97,7 +99,8 @@ public class NettyServer implements RpcServer {
                             ChannelPipeline pipeline = ch.pipeline();
                             //往管道中添加Handler，注意入站Handler与出站Handler都必须按实际执行顺序添加，比如先解码再Server处理，那Decoder()就要放在前面。
                             //但入站和出站Handler之间则互不影响，这里我就是先添加的出站Handler再添加的入站
-                            pipeline.addLast(new CommonEncoder(serializer))
+                            pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
+                                    .addLast(new CommonEncoder(serializer))
                                      // 基于长度域拆包器以及拒绝非本协议连接
                                      // 对客户端传送过来的数据包进行拆包,然后拼装成符合自定义数据包大小的ByteBuf
                                     .addLast(new Spliter())

@@ -1,11 +1,14 @@
 package com.shampohoe.rpc.codec;
 
+import com.esotericsoftware.minlog.Log;
+import com.shampohoe.rpc.entity.RpcMessage;
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.enums.PackageType;
 import com.shampohoe.rpc.serializer.CommonSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ClassName:CommonEncoder
@@ -16,6 +19,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * @Create 2023/9/13 14:40
  * #Version 1.1
  */
+@Slf4j
 public class CommonEncoder extends MessageToByteEncoder {
 
     private static final int MAGIC_NUMBER = 0xCAFEBABE;
@@ -32,14 +36,18 @@ public class CommonEncoder extends MessageToByteEncoder {
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         //数据写到缓冲区
+        log.info("this is encoder");
+        RpcMessage msgc=(RpcMessage)msg;
         out.writeInt(MAGIC_NUMBER);
-        if(msg instanceof RpcRequest){
+        if(msgc.getMessageType()==PackageType.REQUEST_PACK.getCode()){
             out.writeInt(PackageType.REQUEST_PACK.getCode());
-        }else {
+        }else if(msgc.getMessageType()==PackageType.RESPONSE_PACK.getCode()){
             out.writeInt(PackageType.RESPONSE_PACK.getCode());
+        }else{
+            out.writeInt(PackageType.HEARTBEAT_PACK.getCode());
         }
         out.writeInt(serializer.getCode());
-        byte[] bytes = serializer.serialize(msg);
+        byte[] bytes = serializer.serialize(msgc);
         out.writeInt(bytes.length);
         out.writeBytes(bytes);
     }

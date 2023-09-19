@@ -1,16 +1,15 @@
 package com.shampohoe.rpc.netty.client;
 
 import com.shampohoe.rpc.client.RpcClient;
-import com.shampohoe.rpc.codec.CommonDecoder;
-import com.shampohoe.rpc.codec.CommonEncoder;
+import com.shampohoe.rpc.entity.RpcMessage;
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.entity.RpcResponse;
+import com.shampohoe.rpc.enums.PackageType;
 import com.shampohoe.rpc.enums.RpcError;
 import com.shampohoe.rpc.exception.RpcException;
 import com.shampohoe.rpc.factory.SingletonFactory;
 import com.shampohoe.rpc.loadbalance.LoadBalancer;
 import com.shampohoe.rpc.loadbalance.loadbalancer.RandomLoadBalance;
-import com.shampohoe.rpc.registry.ServiceRegistry;
 import com.shampohoe.rpc.registry.ServiceDiscovery;
 import com.shampohoe.rpc.registry.zk.ZKServiceDiscoveryImpl;
 import com.shampohoe.rpc.serializer.CommonSerializer;
@@ -21,11 +20,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import io.netty.bootstrap.Bootstrap;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -70,6 +64,10 @@ public class NettyClient implements RpcClient {
     private final CommonSerializer serializer;
     private final UnprocessedRequests unprocessedRequests;
 
+    public CommonSerializer getSerializer(){
+        return serializer;
+    }
+
     public NettyClient(Integer serializer, LoadBalancer loadBalancer) {
         // 初始化注册中心，建立连接
         this.serviceDiscovery =  new ZKServiceDiscoveryImpl(loadBalancer);
@@ -96,8 +94,12 @@ public class NettyClient implements RpcClient {
             }
 
             unprocessedRequests.put(rpcRequest.getRequestId(), resultFuture);
+            //将request封装成rpcMessage
+            RpcMessage rpcMessage = RpcMessage.builder().data(rpcRequest)
+                    .requestId(rpcRequest.getRequestId())
+                    .messageType(PackageType.REQUEST_PACK.getCode()).build();
 
-            channel.writeAndFlush(rpcRequest).addListener((ChannelFutureListener) future1 -> {
+            channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future1 -> {
                 if (future1.isSuccess()) {
                     log.info(String.format("客户端发送消息: %s", rpcRequest.toString()));
                 } else {

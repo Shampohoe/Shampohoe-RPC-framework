@@ -14,6 +14,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -42,6 +43,7 @@ public class ChannelProvider {
         if (channels.containsKey(key)) {
             Channel channel = channels.get(key);
             if(channels != null && channel.isActive()) {
+                log.info("旧的channel还能用");
                 return channel;
             } else {
                 channels.remove(key);
@@ -56,13 +58,14 @@ public class ChannelProvider {
                 // out出栈主要是对写回结果进行加工
                 // in入栈主要是用来读取服务端数据,写回结果
                 // 发送RpcRequest请求对象,经过CommonEncoder编码按照自定义协议编码成ByteBuf对象
-                pipeline.addLast(new CommonEncoder(serializer))
+                pipeline.addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
+                        .addLast(new CommonEncoder(serializer))
                         // 接收服务端响应回来的RpcResponse对象,经过Spliter,对网络数据包按照基于固定长度域的拆包器进行拆包
                         .addLast(new Spliter())
                         // 对数据包按照自定义协议进行解码成POJO对象
                         .addLast(new CommonDecoder())
                         // 客户端对解码出来的POJO对象进行调用处理
-                        .addLast(new NettyClientHandler());
+                        .addLast(new NettyClientHandler(serializer));
             }
         });
 

@@ -25,7 +25,7 @@ public class RpcRequest implements Serializable {
      */
     private String requestId;
     /**
-     * 待调用接口名称
+     * 待调用接口的名称
      */
     private String interfaceName;
     /**

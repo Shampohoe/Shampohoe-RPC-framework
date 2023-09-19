@@ -17,7 +17,8 @@ import lombok.Getter;
 public enum PackageType {
 
     REQUEST_PACK(0),
-    RESPONSE_PACK(1);
+    RESPONSE_PACK(1),
+    HEARTBEAT_PACK(2);
 
     private final int code;
 }

@@ -1,5 +1,6 @@
 package com.shampohoe.rpc.codec;
 
+import com.shampohoe.rpc.entity.RpcMessage;
 import com.shampohoe.rpc.entity.RpcRequest;
 import com.shampohoe.rpc.entity.RpcResponse;
 import com.shampohoe.rpc.enums.PackageType;
@@ -34,15 +35,17 @@ public class CommonDecoder extends ReplayingDecoder {
             throw new RpcException(RpcError.UNKNOWN_PROTOCOL);
         }
         int packageCode = in.readInt();
-        Class<?> packageClass;
+        /*Class<?> packageClass;
         if(packageCode == PackageType.REQUEST_PACK.getCode()){
             packageClass = RpcRequest.class;
         }else if (packageCode == PackageType.RESPONSE_PACK.getCode()){
             packageClass = RpcResponse.class;
+        }else if (packageCode == PackageType.HEARTBEAT_PACK.getCode()){
+            packageClass = RpcResponse.class;
         }else {
             log.error("不识别的数据包：{}", packageCode);
             throw new RpcException(RpcError.UNKNOWN_PACKAGE_TYPE);
-        }
+        }*/
         int serializerCode = in.readInt();
         CommonSerializer serializer = CommonSerializer.getByCode(serializerCode);
         if(serializer == null){
@@ -52,8 +55,9 @@ public class CommonDecoder extends ReplayingDecoder {
         int length = in.readInt();
         byte[] bytes = new byte[length];
         in.readBytes(bytes);
-        Object obj = serializer.deserialize(bytes, packageClass);
+        Object obj = serializer.deserialize(bytes, RpcMessage.class);
         //添加到对象列表
         out.add(obj);
+        log.info("this is decoder");
     }
 }

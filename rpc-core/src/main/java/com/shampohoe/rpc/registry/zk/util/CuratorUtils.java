@@ -36,7 +36,7 @@ public class CuratorUtils {
 	private static final Set<String> PERSISTENT_REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
 	private static final Set<String> EPHEMERAL_REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
 	private static CuratorFramework zkClient;
-	private static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:2181";
+	private static final String DEFAULT_ZOOKEEPER_ADDRESS = "192.168.159.130";
 
 	private CuratorUtils() {}
 
